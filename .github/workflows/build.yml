@@ -7,7 +7,8 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: 
+    branches:
+      - feature/githubActionsBuild 
       - master
       - development
   release:
@@ -20,6 +21,33 @@ jobs:
           AhMyth-Server
     runs-on: ubuntu-latest
     steps:
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Cache Electron
+        uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/.cache/electron
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/package-lock.json')) }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      - name: Cache Electron-Builder
+        uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/.cache/electron-builder
+          key: ${{ runner.os }}-electron-builder-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/package-lock.json')) }}
+          restore-keys: |
+            ${{ runner.os }}-electron-builder-cache-
+      - uses: actions/checkout@v2
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v2
+      - name: Install deps
+        run: sudo apt-get install --no-install-recommends -y wine32 wine64 gcc-multilib g++-multilib || true
       - uses: actions/checkout@v2
       - name: Setup Node.js environment
         uses: actions/setup-node@v1.4.3
